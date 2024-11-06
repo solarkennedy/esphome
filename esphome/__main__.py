@@ -100,10 +100,10 @@ def choose_upload_log_host(
             return CORE.address
     if (
         show_mqtt
-        and CONF_MQTT in CORE.config
-        and mqtt_logging_enabled(CORE.config[CONF_MQTT])
+        and (mqtt_config := CORE.config.get(CONF_MQTT))
+        and mqtt_logging_enabled(mqtt_config)
     ):
-        options.append((f"MQTT ({CORE.config[CONF_MQTT][CONF_BROKER]})", "MQTT"))
+        options.append((f"MQTT ({mqtt_config[CONF_BROKER]})", "MQTT"))
         if default == "OTA":
             return "MQTT"
     if default is not None:
@@ -114,11 +114,12 @@ def choose_upload_log_host(
 
 
 def mqtt_logging_enabled(mqtt_config):
-    if mqtt_config[CONF_LOG_TOPIC] is None:
+    log_topic = mqtt_config[CONF_LOG_TOPIC]
+    if log_topic is None:
         return False
-    if CONF_TOPIC not in mqtt_config[CONF_LOG_TOPIC]:
+    if CONF_TOPIC not in log_topic:
         return False
-    if mqtt_config[CONF_LOG_TOPIC].get(CONF_LEVEL, None) == "NONE":
+    if log_topic.get(CONF_LEVEL, None) == "NONE":
         return False
     return True
 
