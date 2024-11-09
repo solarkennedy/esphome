@@ -5,6 +5,7 @@
 #include "esphome/core/automation.h"
 
 const size_t DFPLAYER_READ_BUFFER_LENGTH = 25;  // two messages + some extra
+static const char *const TAG = "dfplayer";
 
 namespace esphome {
 namespace dfplayer {
@@ -23,62 +24,91 @@ enum Device {
   TF_CARD = 2,
 };
 
+// See the datasheet here:
+// https://github.com/DFRobot/DFRobotDFPlayerMini/blob/master/doc/FN-M16P%2BEmbedded%2BMP3%2BAudio%2BModule%2BDatasheet.pdf
 class DFPlayer : public uart::UARTDevice, public Component {
  public:
   void loop() override;
 
   void next() {
     this->ack_set_is_playing_ = true;
+    ESP_LOGD(TAG, "Playing next track");
     this->send_cmd_(0x01);
   }
   void previous() {
     this->ack_set_is_playing_ = true;
+    ESP_LOGD(TAG, "Playing previous track");
     this->send_cmd_(0x02);
   }
   void play_mp3(uint16_t file) {
     this->ack_set_is_playing_ = true;
+    ESP_LOGD(TAG, "Playing file %d in mp3 folder", file);
     this->send_cmd_(0x12, file);
   }
   void play_file(uint16_t file) {
     this->ack_set_is_playing_ = true;
+    ESP_LOGD(TAG, "Playing file %d", file);
     this->send_cmd_(0x03, file);
   }
   void play_file_loop(uint16_t file) {
     this->ack_set_is_playing_ = true;
+    ESP_LOGD(TAG, "Playing file %d in loop", file);
     this->send_cmd_(0x08, file);
   }
   void play_folder(uint16_t folder, uint16_t file);
   void play_folder_loop(uint16_t folder) {
     this->ack_set_is_playing_ = true;
+    ESP_LOGD(TAG, "Playing folder %d in loop", folder);
     this->send_cmd_(0x17, folder);
   }
-  void volume_up() { this->send_cmd_(0x04); }
-  void volume_down() { this->send_cmd_(0x05); }
-  void set_device(Device device) { this->send_cmd_(0x09, device); }
-  void set_volume(uint8_t volume) { this->send_cmd_(0x06, volume); }
-  void set_eq(EqPreset preset) { this->send_cmd_(0x07, preset); }
+  void volume_up() {
+    ESP_LOGD(TAG, "Increasing volume");
+    this->send_cmd_(0x04);
+  }
+  void volume_down() {
+    ESP_LOGD(TAG, "Decreasing volume");
+    this->send_cmd_(0x05);
+  }
+  void set_device(Device device) {
+    ESP_LOGD(TAG, "Setting device to %d", device);
+    this->send_cmd_(0x09, device);
+  }
+  void set_volume(uint8_t volume) {
+    ESP_LOGD(TAG, "Setting volume to %d", volume);
+    this->send_cmd_(0x06, volume);
+  }
+  void set_eq(EqPreset preset) {
+    ESP_LOGD(TAG, "Setting EQ to %d", preset);
+    this->send_cmd_(0x07, preset);
+  }
   void sleep() {
     this->ack_reset_is_playing_ = true;
+    ESP_LOGD(TAG, "Putting DFPlayer to sleep");
     this->send_cmd_(0x0A);
   }
   void reset() {
     this->ack_reset_is_playing_ = true;
+    ESP_LOGD(TAG, "Resetting DFPlayer");
     this->send_cmd_(0x0C);
   }
   void start() {
     this->ack_set_is_playing_ = true;
+    ESP_LOGD(TAG, "Starting playback");
     this->send_cmd_(0x0D);
   }
   void pause() {
     this->ack_reset_is_playing_ = true;
+    ESP_LOGD(TAG, "Pausing playback");
     this->send_cmd_(0x0E);
   }
   void stop() {
     this->ack_reset_is_playing_ = true;
+    ESP_LOGD(TAG, "Stopping playback");
     this->send_cmd_(0x16);
   }
   void random() {
     this->ack_set_is_playing_ = true;
+    ESP_LOGD(TAG, "Playing random file");
     this->send_cmd_(0x18);
   }
 
